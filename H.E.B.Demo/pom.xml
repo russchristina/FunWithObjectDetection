@@ -42,8 +42,8 @@
 			<artifactId>spring-restdocs-mockmvc</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- I'll be storing images in an S3 bucket. I don't need to include the dependency
-		version as the BOM includes the version.-->
+		<!-- I'll be storing images in an S3 bucket. I don't need to include the 
+			dependency version as the BOM includes the version. -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>

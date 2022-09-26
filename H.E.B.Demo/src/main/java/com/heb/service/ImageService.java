@@ -40,23 +40,39 @@ public class ImageService {
 	}
 
 	public List<Image> findAll() {
-		return this.imageRepository.findAll();
+		return imageRepository.findAll();
 	}
 
 	public List<Image> findByTagsIn(String tags) {
+		return imageRepository.findByTagsIn(isolateTags(tags));
+	}
+	
+	public Set<Tag> isolateTags(String tags){
 		String[] individualTags = tags.split(",");
 		Set<Tag> setOfTags = new HashSet<>();
 		for (String tag : individualTags) {
 			setOfTags.add(new Tag(tag, 0));
 		}
-
-		return this.imageRepository.findByTagsIn(setOfTags);
+		return setOfTags;
 	}
 
+	/**
+	 * Finds an image by its id. 
+	 * @param id the id of the image to search for
+	 * @return an Optional which may or may not contain a requested image
+	 */
 	public Optional<Image> findById(int id) {
-		return this.imageRepository.findById(id);
+		return imageRepository.findById(id);
 	}
 	
+	/**
+	 * This method saves a file. This entails uploading the image to the cloud and storing its URL
+	 * in the database after possibly grabbing tags for the image from Imagga.
+	 * @param image the file that the client has uploaded
+	 * @param label the label that should be attached to the image. Can be null.
+	 * @param objectDetection a flag indicating the client has request object detection.
+	 * @return the persisted image
+	 */
 	public Image save(MultipartFile image, String label, boolean objectDetection) {
 		uploadImage(image);
 		Set<Tag> extractedTags = (objectDetection) ? extractTags(image):null;
@@ -71,6 +87,12 @@ public class ImageService {
 		
 	}
 	
+	/**
+	 * This method sanitizes a file name by removing spaces from its name and adding the proper
+	 * file extension if need be.
+	 * @param image the image that the client has uploaded
+	 * @return the sanitized file name
+	 */
 	public String sanitizeImageName(MultipartFile image) {
 		String fileName = image.getOriginalFilename();
 		fileName = fileName.contains(" ") ? fileName.replace(" ", "-") : fileName;
@@ -84,16 +106,21 @@ public class ImageService {
 	 * the extension by splitting around the "." before the extension and returning the first
 	 * element of the array, which should be the file name. It's lazy, but at the very least it
 	 * accounts for any file extension.
-	 * @param image The image that the client has uploaded.
-	 * @return
+	 * @param image the image that the client has uploaded
+	 * @return the newly generated label for the file
 	 */
 	public String generateLabel(MultipartFile image) {
 		return image.getOriginalFilename().split(".")[0];
 	}
 	
+	/**
+	 * This method collects tags from the Imagga response payload.
+	 * @param image the image the client has uploaded.
+	 * @return a collection of extracted tags
+	 */
 	public Set<Tag> extractTags(MultipartFile image){
 		HashSet<Tag> extractedTags = new HashSet<>();
-		ImaggaDto imaggaPayload = this.fetchTags(image);
+		ImaggaDto imaggaPayload = fetchTags(image);
 		TagDto[] tags = imaggaPayload.getResult().getTags();
 		for(TagDto tagDto : tags) {
 			extractedTags.add(new Tag(tagDto.getTag().getEn(), tagDto.getConfidence()));
@@ -101,9 +128,10 @@ public class ImageService {
 		return extractedTags;
 	}
 
-	/*
-	 * My AWS access key and secret are handled as environment variables on my machine to keep
-	 * them safe.
+	/**
+	 * This method uploads an image to a bucket. The AWS access key and secret are handled as
+	 * environment variables on the local host to keep them safe.
+	 * @param image the image that the client has uploaded
 	 */
 	public void uploadImage(MultipartFile image) {
 		PutObjectRequest request = PutObjectRequest.builder().bucket("christina-s3").
@@ -111,14 +139,19 @@ public class ImageService {
 				.key(sanitizeImageName(image)).build();
 
 		try {
-			this.s3Client.putObject(request, RequestBody.fromBytes(image.getBytes()));
+			s3Client.putObject(request, RequestBody.fromBytes(image.getBytes()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 	
+	/**
+	 * This method fetches tags for an image from the Imagga API.
+	 * @param image The image the client has uploaded
+	 * @return a DTO containing a response payload from the Imagga API
+	 */
 	public ImaggaDto fetchTags(MultipartFile image) {
-		ResponseEntity<ImaggaDto> response = this.restTemplate.getForEntity(URI.create(imaggaResource + s3Location + "/" + image.getOriginalFilename()), ImaggaDto.class);
+		ResponseEntity<ImaggaDto> response = restTemplate.getForEntity(URI.create(imaggaResource + s3Location + "/" + image.getOriginalFilename()), ImaggaDto.class);
 		return response.getBody();
 	}
 }
