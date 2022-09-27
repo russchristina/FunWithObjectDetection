@@ -5,7 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.annotations.SQLInsert;
 
 /**
  * I need to rework this model as it doesn't quite make sense for the following reasons:

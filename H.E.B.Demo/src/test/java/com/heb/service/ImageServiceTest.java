@@ -1,8 +1,5 @@
 package com.heb.service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Assertions;
@@ -16,7 +13,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.client.RestTemplate;
 
-import com.heb.model.Image;
 import com.heb.model.Tag;
 import com.heb.repository.ImageRepository;
 
