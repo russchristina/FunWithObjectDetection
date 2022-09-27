@@ -7,6 +7,20 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * I need to rework this model as it doesn't quite make sense for the following reasons:
+ * 
+ * 1) A tag's confidence is stored with it, but the confidence is actually tied to the image - NOT the tag. This means
+ * that putting the confidence on the tag table strictly is not a good idea.
+ * 
+ * 2) With my current implementation, the tag name is the PK. That is fine, but I do need to make sure that I check
+ * the DB for the existence of a tag if I'm going to use this approach as it is now nearly impossible to insert
+ * certain related images. Haha. I'm thinking that I actually want a table that stores an image id, a tag id, and a
+ * column for the confidence. In any case, at this point, I'm implementing a code freeze as it's not wise to work on
+ * the source code at this point.
+ * @author 17084
+ *
+ */
 @Entity
 
 @Table(name = "tag")

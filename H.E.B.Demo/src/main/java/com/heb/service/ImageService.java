@@ -29,7 +29,7 @@ public class ImageService {
 	private ImageRepository imageRepository;
 	private S3Client s3Client;
 	private RestTemplate restTemplate;
-	private static final String s3Location = "https://christina-s3.s3.us-east-2.amazonaws.com";
+	private static final String s3Location = "https://christina-s3.s3.us-east-2.amazonaws.com/";
 	private static final String imaggaResource = "https://api.imagga.com/v2/tags?image_url=";
 
 	@Autowired
@@ -48,9 +48,11 @@ public class ImageService {
 	}
 	
 	public Set<Tag> isolateTags(String tags){
-		String[] individualTags = tags.split(",");
 		Set<Tag> setOfTags = new HashSet<>();
+		String[] individualTags = tags.split(",");
 		for (String tag : individualTags) {
+			//If a tag is an empty string, I don't want it.
+			if(tag.equals("")) continue;
 			setOfTags.add(new Tag(tag, 0));
 		}
 		return setOfTags;
@@ -78,7 +80,7 @@ public class ImageService {
 		Set<Tag> extractedTags = (objectDetection) ? extractTags(image):null;
 		Image savedImage = this.imageRepository.save(
 				new Image(
-						s3Location + "/" + sanitizeImageName(image), 
+						s3Location + sanitizeImageName(image), 
 						(label == null) ? image.getOriginalFilename() : label,
 						objectDetection, 
 						extractedTags)
@@ -151,7 +153,7 @@ public class ImageService {
 	 * @return a DTO containing a response payload from the Imagga API
 	 */
 	public ImaggaDto fetchTags(MultipartFile image) {
-		ResponseEntity<ImaggaDto> response = restTemplate.getForEntity(URI.create(imaggaResource + s3Location + "/" + image.getOriginalFilename()), ImaggaDto.class);
+		ResponseEntity<ImaggaDto> response = restTemplate.getForEntity(URI.create(imaggaResource + s3Location + image.getOriginalFilename()), ImaggaDto.class);
 		return response.getBody();
 	}
 }
